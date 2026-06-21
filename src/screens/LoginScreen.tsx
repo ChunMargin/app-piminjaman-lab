@@ -1,22 +1,26 @@
+import { useRouter } from 'expo-router';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
 import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
 } from 'react-native';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../services/firebase'; // Memanggil auth dari konfigurasi yang kamu buat
+import { auth } from '../services/firebase';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'Pelanggan' | 'Kasir'>('Pelanggan');
+  
+  // 1. Inisialisasi router di sini
+  const router = useRouter();
 
   // Fungsi untuk Login
   const handleLogin = async () => {
@@ -27,6 +31,10 @@ const LoginScreen = () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       Alert.alert('Login Sukses', `Selamat datang, ${userCredential.user.email}!\nMasuk sebagai: ${role}`);
+      
+      // 2. Perintah pindah halaman setelah login sukses
+      router.replace('/catalog'); 
+      
     } catch (error: any) {
       Alert.alert('Login Gagal', error.message);
     }
@@ -41,6 +49,10 @@ const LoginScreen = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       Alert.alert('Daftar Sukses', `Akun ${userCredential.user.email} berhasil dibuat!\nRole: ${role}`);
+      
+      // 3. Perintah pindah halaman setelah daftar sukses
+      router.replace('/catalog'); 
+      
     } catch (error: any) {
       Alert.alert('Daftar Gagal', error.message);
     }
