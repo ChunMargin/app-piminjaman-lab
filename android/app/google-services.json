@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "848032731242",
+    "project_id": "hybrid-store-mobile",
+    "storage_bucket": "hybrid-store-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:848032731242:android:e55ed08408a6068c0fba13",
+        "android_client_info": {
+          "package_name": "lol.helena"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCH5G0EtyVZDcpMGrAm3Mns---Y8P4j0AY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
