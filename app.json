@@ -1,4 +1,7 @@
 {
-  "name": "HybridStore",
-  "displayName": "HybridStore"
+  "expo": {
+    "name": "mobile-hybrid-store",
+    "slug": "mobile-hybrid-store",
+    "version": "1.0.0"
+  }
 }
