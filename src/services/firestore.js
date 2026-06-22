@@ -4,6 +4,24 @@ import { db } from './firebase';
 // Document ID default untuk pengujian backward-compatibility
 export const PRODUCT_DOC_ID = 'LP8evPugCjdfACQOnNYR'; 
 
+// Mapping dari Product ID API ke Document ID Firestore yang Anda buat di Firebase Console
+export const PRODUCT_TO_FIRESTORE_MAP = {
+  'esp32': 'esp32',
+  'mpu6050': 'sensor-mpu6050',
+  'multimeter': 'multimeter',
+  'plc_siemens': 'modul-plc',
+  'arduino_uno': 'arduino'
+};
+
+/**
+ * Mendapatkan Document ID Firestore berdasarkan ID produk API
+ * @param {string} productId - ID produk dari API/Katalog
+ * @returns {string} - Document ID di Firestore
+ */
+export const getFirestoreDocId = (productId) => {
+  return PRODUCT_TO_FIRESTORE_MAP[productId] || productId;
+};
+
 /**
  * Meminjam produk (mengurangi stok di Firestore)
  * @param {string} productId - ID dokumen produk di Firestore
@@ -50,7 +68,9 @@ export const seedProductsToFirestore = async (products) => {
   const batch = writeBatch(db);
 
   products.forEach((product) => {
-    const productRef = doc(db, 'inventory', product.id);
+    // Gunakan document ID ter-map sesuai dengan Firebase Console
+    const docId = getFirestoreDocId(product.id);
+    const productRef = doc(db, 'inventory', docId);
     batch.set(productRef, {
       name: product.name,
       category: product.category,

@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { db } from '../services/firebase';
-import { checkoutProduct, updateProductStock, seedProductsToFirestore } from '../services/firestore';
+import { checkoutProduct, updateProductStock, seedProductsToFirestore, getFirestoreDocId } from '../services/firestore';
 import { fetchCatalog, Product } from '../services/api';
 
 const CatalogScreen = () => {
@@ -79,7 +79,8 @@ const CatalogScreen = () => {
   const handleBorrow = async (productId: string, currentStock: number) => {
     setIsActionLoading(true);
     try {
-      await checkoutProduct(productId, currentStock, 1);
+      const docId = getFirestoreDocId(productId);
+      await checkoutProduct(docId, currentStock, 1);
       Alert.alert('Peminjaman Berhasil', 'Silakan ambil alat di ruang laboran.');
     } catch (error: any) {
       Alert.alert('Gagal Meminjam', error.message);
@@ -91,7 +92,8 @@ const CatalogScreen = () => {
   // Fungsi Update Stok (Admin: Tambah)
   const handleIncrementStock = async (productId: string, currentStock: number) => {
     try {
-      await updateProductStock(productId, currentStock + 1);
+      const docId = getFirestoreDocId(productId);
+      await updateProductStock(docId, currentStock + 1);
     } catch (error: any) {
       Alert.alert('Error', error.message);
     }
@@ -104,7 +106,8 @@ const CatalogScreen = () => {
       return;
     }
     try {
-      await updateProductStock(productId, currentStock - 1);
+      const docId = getFirestoreDocId(productId);
+      await updateProductStock(docId, currentStock - 1);
     } catch (error: any) {
       Alert.alert('Error', error.message);
     }
@@ -262,8 +265,9 @@ const CatalogScreen = () => {
         renderItem={({ item }) => {
           // Stok real-time diambil dari liveStocks berdasarkan ID produk.
           // Jika belum disinkronisasikan ke Firestore, tampilkan stok default dari API.
-          const isStockInFirestore = liveStocks.hasOwnProperty(item.id);
-          const stock = isStockInFirestore ? liveStocks[item.id] : item.defaultStock;
+          const firestoreDocId = getFirestoreDocId(item.id);
+          const isStockInFirestore = liveStocks.hasOwnProperty(firestoreDocId);
+          const stock = isStockInFirestore ? liveStocks[firestoreDocId] : item.defaultStock;
           const stockColor = getStockColor(stock);
 
           return (
