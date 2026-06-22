@@ -1,5 +1,9 @@
 import { useRouter } from 'expo-router';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signInAnonymously 
+} from 'firebase/auth';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -25,17 +29,30 @@ const LoginScreen = () => {
 
   // Fungsi untuk Login
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Peringatan', 'Email dan password tidak boleh kosong!');
-      return;
-    }
     setIsLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      setIsLoading(false);
-      Alert.alert('Login Sukses', `Selamat datang, ${userCredential.user.email}!\nMasuk sebagai: ${role}`);
+      let userCredential;
       
-      // Pindah halaman dengan parameter role
+      // Jika login sebagai Mahasiswa, gunakan SignInAnonymously
+      if (role === 'Mahasiswa') {
+        userCredential = await signInAnonymously(auth);
+      } else {
+        // Jika login sebagai Admin Lab, wajib input email & password
+        if (!email || !password) {
+          Alert.alert('Peringatan', 'Email dan password tidak boleh kosong!');
+          setIsLoading(false);
+          return;
+        }
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+      }
+      
+      setIsLoading(false);
+      
+      // Nama sambutan untuk Alert
+      const welcomeName = role === 'Mahasiswa' ? 'Mahasiswa (Anonim)' : userCredential.user.email;
+      Alert.alert('Login Sukses', `Selamat datang, ${welcomeName}!\nMasuk sebagai: ${role}`);
+      
+      // Pindah halaman ke katalog dengan parameter role
       router.replace({
         pathname: '/catalog',
         params: { role }
@@ -47,7 +64,7 @@ const LoginScreen = () => {
     }
   };
 
-  // Fungsi untuk Daftar Akun Baru
+  // Fungsi untuk Daftar Akun Baru (Hanya untuk Admin Lab)
   const handleRegister = async () => {
     if (!email || !password) {
       Alert.alert('Peringatan', 'Email dan password tidak boleh kosong!');
@@ -102,41 +119,55 @@ const LoginScreen = () => {
           </View>
 
           <View style={styles.formContainer}>
-            <Text style={styles.inputLabel}>Alamat Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="nama@kampus.ac.id"
-              placeholderTextColor="#64748B"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              editable={!isLoading}
-            />
+            {role === 'Admin Lab' ? (
+              <>
+                <Text style={styles.inputLabel}>Alamat Email</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="nama@kampus.ac.id"
+                  placeholderTextColor="#64748B"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!isLoading}
+                />
 
-            <Text style={styles.inputLabel}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="••••••••"
-              placeholderTextColor="#64748B"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              editable={!isLoading}
-            />
+                <Text style={styles.inputLabel}>Password</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="••••••••"
+                  placeholderTextColor="#64748B"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  editable={!isLoading}
+                />
+              </>
+            ) : (
+              <View style={styles.infoBox}>
+                <Text style={styles.infoText}>
+                  Sebagai Mahasiswa, Anda dapat langsung masuk tanpa menggunakan email dan password (akses tamu/anonim).
+                </Text>
+              </View>
+            )}
 
             {isLoading ? (
               <ActivityIndicator size="large" color="#3B82F6" style={{ marginVertical: 16 }} />
             ) : (
               <>
                 <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                  <Text style={styles.loginButtonText}>Masuk Ke Sistem</Text>
+                  <Text style={styles.loginButtonText}>
+                    {role === 'Mahasiswa' ? 'Masuk sebagai Mahasiswa' : 'Masuk Ke Sistem'}
+                  </Text>
                 </TouchableOpacity>
                 
-                <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-                  <Text style={styles.registerButtonText}>Daftar Akun Baru</Text>
-                </TouchableOpacity>
+                {role === 'Admin Lab' && (
+                  <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
+                    <Text style={styles.registerButtonText}>Daftar Akun Baru</Text>
+                  </TouchableOpacity>
+                )}
               </>
             )}
           </View>
@@ -149,7 +180,7 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#0F172A' // Premium Dark Slate
+    backgroundColor: '#0F172A'
   },
   scrollContainer: { 
     flexGrow: 1, 
@@ -157,7 +188,7 @@ const styles = StyleSheet.create({
     padding: 20 
   },
   card: {
-    backgroundColor: '#1E293B', // Slate 800
+    backgroundColor: '#1E293B',
     borderRadius: 16,
     padding: 24,
     shadowColor: '#000',
@@ -166,14 +197,14 @@ const styles = StyleSheet.create({
     shadowRadius: 15,
     elevation: 10,
     borderWidth: 1,
-    borderColor: '#334155', // Slate 700
+    borderColor: '#334155',
   },
   headerContainer: { 
     alignItems: 'center', 
     marginBottom: 32 
   },
   logoBadge: {
-    backgroundColor: '#3B82F6', // Blue Accent
+    backgroundColor: '#3B82F6',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 8,
@@ -188,12 +219,12 @@ const styles = StyleSheet.create({
   title: { 
     fontSize: 26, 
     fontWeight: 'bold', 
-    color: '#F8FAFC', // Slate 50
+    color: '#F8FAFC',
     marginBottom: 6 
   },
   subtitle: { 
     fontSize: 13, 
-    color: '#94A3B8', // Slate 400
+    color: '#94A3B8',
     textAlign: 'center',
     lineHeight: 18,
   },
@@ -287,6 +318,20 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 16, 
     fontWeight: '600',
+  },
+  infoBox: {
+    backgroundColor: '#0F172A',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  infoText: {
+    color: '#94A3B8',
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
   },
 });
 
